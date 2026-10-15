@@ -28,7 +28,8 @@ html = open("app_template.html", encoding="utf-8").read().replace("%%CORE%%", co
 
 out = "pwa"; shutil.rmtree(out, ignore_errors=True); os.makedirs(out)
 open(f"{out}/index.html", "w", encoding="utf-8").write(html)
-ver = hashlib.sha1(html.encode()).hexdigest()[:10]
+import glob
+ver = hashlib.sha1((html + "".join(open(f,"rb").read().hex()[:2000] + str(__import__("os").path.getsize(f)) for f in sorted(glob.glob("icon-*.png")))).encode()).hexdigest()[:10]
 
 open(f"{out}/sw.js", "w", encoding="utf-8").write(f"""const V = 'smash-timer-{ver}';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
@@ -58,9 +59,9 @@ open(f"{out}/manifest.webmanifest", "w", encoding="utf-8").write(json.dumps({
   "id": "./", "name": "ジャンプスマッシュ・タイマー", "short_name": "スマッシュ", "description": "バドミントン ジャンプスマッシュ強化メニューの自動タイマー",
   "start_url": "./", "scope": "./", "display": "standalone", "orientation": "portrait",
   "background_color": "#0a1511", "theme_color": "#0a1511", "lang": "ja",
-  "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-            {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-            {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}, ensure_ascii=False, indent=1))
+  "icons": [{"src": "icon-192.png?v=3", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+            {"src": "icon-512.png?v=3", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+            {"src": "icon-maskable-512.png?v=3", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}, ensure_ascii=False, indent=1))
 
 for n in (180, 192, 512, 'maskable-512'): shutil.copy(f"icon-{n}.png", f"{out}/icon-{n}.png")
 
