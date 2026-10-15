@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>スマッシュ・タイマー</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0a0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="スマッシュ">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#0a0f1a;--card:#131a2a;--card2:#1b2438;--line:rgba(255,255,255,.08);--tx:#eef2fa;--mut:#8b97b0;
+--work:#ff6a2b;--rest:#26d0b0;--prep:#5aa2ff;--sw:#ffc83d;--acc:#ff6a2b;
+--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);overscroll-behavior:none;
+font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Noto Sans CJK JP",system-ui,sans-serif;
+-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+.view{position:fixed;inset:0;display:none;flex-direction:column}
+.view.on{display:flex}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(var(--sat) + 16px) 16px calc(var(--sab) + 120px)}
+
+/* ---------- Home ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.logo{font-weight:900;letter-spacing:.06em;font-size:15px;color:var(--mut)}
+.logo b{color:var(--acc)}
+.iconbtn{width:40px;height:40px;border-radius:12px;background:var(--card);display:grid;place-items:center}
+.iconbtn svg{width:22px;height:22px;fill:none;stroke:var(--mut);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px}
+.day{position:relative;height:58px;border-radius:14px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--mut);font-weight:700;transition:.15s}
+.day small{font-size:10px;font-weight:600;height:12px}
+.day span{font-size:17px}
+.day.on{background:var(--acc);color:#0a0f1a;box-shadow:0 6px 20px -6px var(--acc)}
+.day.today:not(.on) span{color:var(--tx)}
+.day.done::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--rest)}
+.theme{border-radius:20px;padding:18px 18px 16px;margin-bottom:14px;background:linear-gradient(135deg,var(--card2),var(--card));border:1px solid var(--line);position:relative;overflow:hidden}
+.theme::before{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:var(--acc);opacity:.18;filter:blur(8px)}
+.theme .k{font-size:12px;color:var(--mut);font-weight:700;letter-spacing:.08em}
+.theme .t{font-size:24px;font-weight:900;margin:2px 0 4px}
+.theme .n{font-size:13px;color:var(--mut);line-height:1.5}
+.sec{font-size:12px;color:var(--mut);font-weight:700;letter-spacing:.08em;margin:18px 2px 8px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{height:54px;border-radius:16px;background:var(--card);font-weight:800;font-size:17px;border:2px solid transparent;transition:.15s}
+.seg button.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--card))}
+.seg button small{display:block;font-size:10.5px;color:var(--mut);font-weight:600;margin-top:1px}
+.lv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lv button{border-radius:18px;background:var(--card);padding:12px 6px 11px;border:2px solid transparent;transition:.15s}
+.lv button .l{font-size:30px;font-weight:900;line-height:1.1}
+.lv button .m{font-size:12.5px;color:var(--mut);font-weight:700;margin-top:3px}
+.lv button.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--card))}
+.lv button.on .m{color:var(--tx)}
+.grp{margin-top:14px}
+.grp h4{margin:0 0 6px 4px;font-size:13px;color:var(--acc);display:flex;justify-content:space-between}
+.grp h4 em{font-style:normal;color:var(--mut);font-weight:600}
+.row{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:6px;width:100%;text-align:left}
+.row .nm{flex:1;min-width:0}
+.row .nm b{display:block;font-size:15px}
+.row .nm span{font-size:12px;color:var(--mut)}
+.row .st{font-size:13px;font-weight:800;color:var(--tx);background:var(--card2);padding:4px 10px;border-radius:10px;white-space:nowrap}
+.row .i{width:22px;height:22px;border-radius:50%;background:var(--card2);color:var(--mut);display:grid;place-items:center;font-size:12px;font-weight:800}
+.row.plain{background:transparent;border:1px dashed var(--line);padding:10px 14px}
+.row.plain .nm span{display:block;line-height:1.5}
+.note{font-size:13px;color:var(--mut);background:var(--card);border-radius:14px;padding:12px 14px;line-height:1.6;margin-top:10px}
+.week{margin:18px 2px 0;font-size:12.5px;color:var(--mut)}
+.startbar{position:fixed;left:0;right:0;bottom:0;padding:26px 16px calc(var(--sab) + 14px);background:linear-gradient(transparent,var(--bg) 40%)}
+.go{width:100%;height:62px;border-radius:20px;background:var(--acc);color:#0a0f1a;font-weight:900;font-size:19px;letter-spacing:.04em;box-shadow:0 10px 30px -8px var(--acc);display:flex;align-items:center;justify-content:center;gap:10px}
+.go svg{width:22px;height:22px;fill:#0a0f1a}
+.go small{font-weight:700;opacity:.7;font-size:14px}
+.go:active{transform:scale(.98)}
+
+/* ---------- Run ---------- */
+#run{--pc:var(--prep);--pbg:rgba(90,162,255,.24);background:radial-gradient(130% 62% at 50% -6%,var(--pbg),transparent 62%),var(--bg);transition:background .35s}
+#run[data-phase=work]{--pc:var(--work);--pbg:rgba(255,106,43,.30)}
+#run[data-phase=rest]{--pc:var(--rest);--pbg:rgba(38,208,176,.24)}
+#run[data-phase=switch]{--pc:var(--sw);--pbg:rgba(255,200,61,.28)}
+.rtop{padding:calc(var(--sat) + 10px) 16px 0;display:flex;align-items:center;gap:12px}
+.rtop .prog{flex:1}
+.bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--pc);border-radius:3px;transition:width .2s linear}
+.rtop .tm{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin-top:5px;font-variant-numeric:tabular-nums}
+.rmid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 16px;min-height:0;text-align:center}
+.pill{display:inline-block;padding:6px 18px;border-radius:999px;background:var(--pc);color:#0a0f1a;font-weight:900;font-size:15px;letter-spacing:.14em;margin-bottom:10px}
+.exn{font-size:clamp(22px,6.4vw,32px);font-weight:900;line-height:1.25;max-width:100%}
+.setinfo{margin-top:4px;font-size:14px;color:var(--mut);font-weight:700;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+.side{display:inline-block;background:var(--card2);color:var(--tx);border:2px solid var(--pc);padding:1px 12px;border-radius:10px;font-weight:900}
+.side[hidden]{display:none}
+.ringw{position:relative;width:min(72vw,40vh);aspect-ratio:1;margin:12px 0 8px}
+.ringw svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ringw .trk{stroke:rgba(255,255,255,.08)}
+.ringw .pg{stroke:var(--pc);stroke-linecap:round;transition:stroke .3s}
+.digits{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.digits b{font-size:min(26vw,14vh);font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.digits small{font-size:13px;color:var(--mut);font-weight:700;margin-top:4px;max-width:70%;line-height:1.35}
+.pop{animation:pop .35s ease-out}
+@keyframes pop{0%{transform:scale(.9)}100%{transform:scale(1)}}
+.next{width:100%;max-width:420px;background:rgba(255,255,255,.06);border-radius:16px;padding:10px 14px;display:flex;gap:10px;align-items:center;text-align:left}
+.next em{font-style:normal;font-size:11px;font-weight:900;letter-spacing:.12em;color:var(--mut)}
+.next b{font-size:14.5px}
+.ctrl{display:flex;align-items:center;justify-content:center;gap:22px;padding:6px 16px calc(var(--sab) + 12px)}
+.cb{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center}
+.cb svg{width:24px;height:24px;fill:var(--tx)}
+.cb.main{width:84px;height:84px;background:var(--pc)}
+.cb.main svg{width:34px;height:34px;fill:#0a0f1a}
+.cb:active{transform:scale(.94)}
+.xrow{display:flex;gap:10px;justify-content:center;padding:0 16px 8px;min-height:40px}
+.chip{height:38px;padding:0 16px;border-radius:19px;background:rgba(255,255,255,.08);font-weight:800;font-size:13.5px}
+.chip[hidden]{display:none}
+
+/* ---------- Done ---------- */
+#done{align-items:center;justify-content:center;text-align:center;padding:24px;background:radial-gradient(120% 60% at 50% 0%,rgba(38,208,176,.25),transparent 60%),var(--bg)}
+#done h1{font-size:32px;margin:6px 0 4px}
+#done p{color:var(--mut);margin:0 0 22px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:420px;margin-bottom:22px}
+.stats div{background:var(--card);border-radius:16px;padding:14px 4px}
+.stats b{display:block;font-size:26px;font-weight:900}
+.stats span{font-size:11.5px;color:var(--mut);font-weight:700}
+.trophy{font-size:64px}
+
+/* ---------- Sheets ---------- */
+.back{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:.25s;z-index:20}
+.back.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:88dvh;background:var(--card);border-radius:24px 24px 0 0;z-index:21;transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;padding-bottom:var(--sab)}
+.sheet.on{transform:none}
+.sheet .hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px}
+.sheet .hd b{font-size:17px}
+.sheet .bd{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 18px 22px}
+.live{font-variant-numeric:tabular-nums;font-weight:900;font-size:14px;background:var(--pc,var(--work));color:#0a0f1a;border-radius:10px;padding:3px 10px;margin-right:8px}
+.live[hidden]{display:none}
+.paper{background:#fff;color:#212529;border-radius:16px;padding:10px 10px 4px;margin-bottom:12px;-webkit-user-select:text;user-select:text}
+.figs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+.figs>div{flex:0 0 auto;width:min(41vw,190px);text-align:center;scroll-snap-align:start}
+.figs svg{width:100%;height:auto;display:block}
+.figs .cap{font-size:11px;line-height:1.35;color:#343a40;padding:0 2px 4px}
+.dt h5{margin:12px 0 4px;font-size:12px;letter-spacing:.06em;display:inline-block;padding:1px 10px;border-radius:8px;color:#fff}
+.dt ol{margin:2px 0 4px;padding-left:20px;line-height:1.6;font-size:14px}
+.dt p{margin:2px 0;font-size:14px;line-height:1.6}
+.tags span{display:inline-block;font-size:11px;font-weight:700;background:var(--card2);color:var(--mut);padding:2px 9px;border-radius:9px;margin-right:5px}
+.sw{display:flex;align-items:center;justify-content:space-between;padding:13px 2px;border-bottom:1px solid var(--line);font-size:15px;font-weight:600}
+.sw small{display:block;color:var(--mut);font-weight:500;font-size:12px;margin-top:2px}
+.sw input{appearance:none;-webkit-appearance:none;width:50px;height:30px;border-radius:15px;background:#2b3550;position:relative;flex:none;margin-left:12px;transition:.2s}
+.sw input::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}
+.sw input:checked{background:var(--rest)}
+.sw input:checked::after{left:23px}
+.btn2{display:block;width:100%;height:50px;border-radius:14px;background:var(--card2);font-weight:800;font-size:15px;margin-top:10px}
+.btn2.red{background:#ff4d6d;color:#fff}
+.help{font-size:12.5px;color:var(--mut);line-height:1.7;margin-top:14px}
+.help b{color:var(--tx)}
+.dlg{position:fixed;left:24px;right:24px;top:50%;transform:translateY(-50%) scale(.95);background:var(--card2);border-radius:22px;padding:22px 18px 16px;z-index:22;opacity:0;pointer-events:none;transition:.2s;text-align:center}
+.dlg.on{opacity:1;pointer-events:auto;transform:translateY(-50%)}
+.dlg b{font-size:18px}.dlg p{color:var(--mut);margin:8px 0 12px;font-size:14px}
+.dlg .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (min-width:700px){.view{max-width:520px;margin:0 auto;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.startbar{max-width:520px;margin:0 auto}.sheet{max-width:520px;margin:0 auto}}
+@media (max-height:640px){.ringw{width:min(60vw,34vh)}.pill{margin-bottom:4px}.next{display:none}}
+</style>
+</head>
+<body>
+
+<!-- Home -->
+<section id="home" class="view on">
+  <div class="scroll" id="homeScroll">
+    <div class="top">
+      <div class="logo">SMASH <b>TIMER</b></div>
+      <button class="iconbtn" id="btnSet" aria-label="設定"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </div>
+    <div class="days" id="days"></div>
+    <div class="theme" id="theme"></div>
+    <div class="sec">場所</div>
+    <div class="seg" id="place"></div>
+    <div class="sec">レベル(セット数)</div>
+    <div class="lv" id="lv"></div>
+    <div class="sec">今日のメニュー</div>
+    <div id="menu"></div>
+    <div class="week" id="week"></div>
+  </div>
+  <div class="startbar"><button class="go" id="btnGo"></button></div>
+</section>
+
+<!-- Run -->
+<section id="run" class="view" data-phase="prep">
+  <div class="rtop">
+    <button class="iconbtn" id="btnClose" aria-label="中断"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="prog">
+      <div class="bar"><i id="pbar"></i></div>
+      <div class="tm"><span id="tmL">0:00</span><span id="grpN"></span><span id="tmR">-0:00</span></div>
+    </div>
+  </div>
+  <div class="rmid">
+    <div class="pill" id="pill">準備</div>
+    <div class="exn" id="exn"></div>
+    <div class="setinfo"><span class="side" id="side" hidden></span><span id="setinfo"></span></div>
+    <div class="ringw">
+      <svg viewBox="0 0 300 300"><circle class="trk" cx="150" cy="150" r="132" fill="none" stroke-width="14"/><circle class="pg" id="ring" cx="150" cy="150" r="132" fill="none" stroke-width="14" stroke-dasharray="829.38" stroke-dashoffset="0"/></svg>
+      <div class="digits"><b id="dig">10</b><small id="cue"></small></div>
+    </div>
+    <div class="next"><em>NEXT</em><b id="nextT"></b></div>
+  </div>
+  <div class="xrow">
+    <button class="chip" id="btnPlus" hidden>休憩 +15秒</button>
+    <button class="chip" id="btnHow" hidden>やり方を見る</button>
+  </div>
+  <div class="ctrl">
+    <button class="cb" id="btnPrev" aria-label="前へ"><svg viewBox="0 0 24 24"><path d="M6 5h2.5v14H6zM20 5v14L9.5 12z"/></svg></button>
+    <button class="cb main" id="btnPlay" aria-label="一時停止"></button>
+    <button class="cb" id="btnNext" aria-label="次へ"><svg viewBox="0 0 24 24"><path d="M15.5 5H18v14h-2.5zM4 5v14l10.5-7z"/></svg></button>
+  </div>
+</section>
+
+<!-- Done -->
+<section id="done" class="view">
+  <div class="trophy">🏆</div>
+  <h1>おつかれさま!</h1>
+  <p id="doneMsg"></p>
+  <div class="stats">
+    <div><b id="sTime">0</b><span>分</span></div>
+    <div><b id="sEx">0</b><span>種目</span></div>
+    <div><b id="sSet">0</b><span>セット</span></div>
+  </div>
+  <button class="go" id="btnHome" style="max-width:420px">ホームへ</button>
+</section>
+
+<div class="back" id="back"></div>
+<div class="sheet" id="sheetDetail">
+  <div class="hd"><b id="dTitle"></b><div style="display:flex;align-items:center"><span class="live" id="dLive" hidden></span><button class="iconbtn" id="dClose"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+  <div class="bd dt" id="dBody"></div>
+</div>
+<div class="sheet" id="sheetSet">
+  <div class="hd"><b>設定</b><button class="iconbtn" id="sClose"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="bd">
+    <label class="sw"><div>ピッ音<small>切り替え・残り3秒に鳴ります</small></div><input type="checkbox" id="oSound"></label>
+    <label class="sw"><div>音声ガイド<small>種目名・「運動」「休憩」を読み上げ</small></div><input type="checkbox" id="oVoice"></label>
+    <label class="sw"><div>バイブ<small>対応する端末のみ</small></div><input type="checkbox" id="oVib"></label>
+    <label class="sw"><div>画面をつけたままにする<small>実行中にスリープしません</small></div><input type="checkbox" id="oWake"></label>
+    <label class="sw"><div>ウォームアップを含める</div><input type="checkbox" id="oWarm"></label>
+    <label class="sw"><div>ストレッチを含める</div><input type="checkbox" id="oCool"></label>
+    <button class="btn2" id="btnTest">音を試す</button>
+    <div class="help" id="help"></div>
+  </div>
+</div>
+<div class="dlg" id="dlg"><b>中断しますか?</b><p>ここまでの記録は保存されません。</p><div class="two"><button class="btn2" id="dlgNo" style="margin:0">続ける</button><button class="btn2 red" id="dlgYes" style="margin:0">やめる</button></div></div>
+
+<script>
+%%CORE%%
+</script>
+<script>
+const DETAIL = %%DETAIL%%;
+</script>
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+let ST = Object.assign({sound:true, voice:false, vib:true, wake:true, warm:true, cool:true}, store.get('st_v1', {}));
+let SEL = Object.assign({place:'home', level:1}, store.get('sel_v1', {}));
+if(!(SEL.level>=0 && SEL.level<=2)) SEL.level = 1;
+if(SEL.place !== 'home' && SEL.place !== 'out') SEL.place = 'home';
+SEL.day = new Date().getDay();
+let HIST = store.get('hist_v1', []);
+
+const ORDER = [1,2,3,4,5,6,0];
+const PH = {prep:'準備', work:'運動', rest:'休憩', 'switch':'反対側'};
+const IC_PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>';
+const IC_PAUSE = '<svg viewBox="0 0 24 24"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>';
+
+function opts(){ return {warm: ST.warm, cool: ST.cool}; }
+function menu(){ return getMenu(SEL.day, SEL.place, SEL.level, opts()); }
+
+/* ---------------- Home ---------------- */
+function weekStart(){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return d.getTime(); }
+function doneDays(){ const ws = weekStart(), s = new Set(); HIST.forEach(h => { if(h.ts >= ws) s.add(new Date(h.ts).getDay()); }); return s; }
+
+function renderHome(){
+  const today = new Date().getDay(), dd = doneDays();
+  const P = PLAN[SEL.day];
+  document.documentElement.style.setProperty('--acc', P.color);
+  $('#days').innerHTML = ORDER.map(d => `<button class="day ${d===SEL.day?'on':''} ${d===today?'today':''} ${dd.has(d)?'done':''}" data-d="${d}"><small>${d===today?'今日':''}</small><span>${DAYS[d]}</span></button>`).join('');
+  const rest = REST_DAYS.includes(SEL.day);
+  $('#theme').innerHTML = `<div class="k">${DAYS[SEL.day]}曜日</div><div class="t">${P.theme}</div><div class="n">${rest ? '回復を優先する日。軽いストレッチだけでもOK。' : '爆発系は疲れていない最初に。質を優先しましょう。'}</div>`;
+  $('#place').innerHTML = [['home','🏠 家','自宅・狭い場所'],['out','🌳 外','体育館・公園・コート']].map(([k,t,s]) => `<button class="${SEL.place===k?'on':''}" data-p="${k}">${t}<small>${s}</small></button>`).join('');
+  $('#lv').innerHTML = LEVELS.map((n,i) => `<button class="${SEL.level===i?'on':''}" data-l="${i}"><div class="l">${n}</div><div class="m">約${estMinutes(SEL.day, SEL.place, i, opts())}分</div></button>`).join('');
+  const m = menu();
+  let h = '';
+  m.forEach(g => {
+    const light = g.key==='warm' || g.key==='cool';
+    const secs = buildTimeline([g]).total;
+    h += `<div class="grp"><h4>${g.label}<em>${light ? g.items.length+'種目 · ' : ''}約${Math.max(1,Math.round(secs/60))}分</em></h4>`;
+    if(light){
+      h += `<div class="row plain"><div class="nm"><span>${g.items.map(i => LIB[i.id].n).join(' → ')}</span></div></div>`;
+    } else {
+      g.items.forEach(i => {
+        const L = LIB[i.id];
+        h += `<button class="row" data-ex="${i.id}"><div class="nm"><b>${L.n}</b><span>${L.amt}${L.side?' ・左右':''}</span></div><div class="st">${i.sets>1?i.sets+'セット':'1回'}</div>${L.card?'<div class="i">?</div>':''}</button>`;
+      });
+    }
+    h += '</div>';
+  });
+  if(SEL.day===6 && SEL.place==='out') h += `<div class="note">外トレは「ダッシュ・バウンディング・デプスジャンプ」のうち、その日の体調に合わせて<b>やるものを選んでOK</b>(スキップは ⏭ ボタン)。デプスジャンプはレベル「大」のみ。</div>`;
+  if(SEL.day===4 && SEL.place==='home') h += `<div class="note">壁のある場所が必要なメディシンボール系(回旋スロー・オーバーヘッドスロー)は「外」のメニューに入っています。</div>`;
+  $('#menu').innerHTML = h;
+  const tot = estMinutes(SEL.day, SEL.place, SEL.level, opts());
+  $('#btnGo').innerHTML = `<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>スタート<small>約${tot}分</small>`;
+  const n = HIST.filter(x => x.ts >= weekStart()).length;
+  $('#week').textContent = n ? `今週 ${n}回 完了 🔥` : '今週はまだ0回。まずは1回やってみよう。';
+}
+
+$('#days').addEventListener('click', e => { const b = e.target.closest('[data-d]'); if(!b) return; SEL.day = +b.dataset.d; renderHome(); });
+$('#place').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if(!b) return; SEL.place = b.dataset.p; store.set('sel_v1', {place:SEL.place, level:SEL.level}); renderHome(); });
+$('#lv').addEventListener('click', e => { const b = e.target.closest('[data-l]'); if(!b) return; SEL.level = +b.dataset.l; store.set('sel_v1', {place:SEL.place, level:SEL.level}); renderHome(); });
+$('#menu').addEventListener('click', e => { const b = e.target.closest('[data-ex]'); if(!b) return; openDetail(b.dataset.ex); });
+
+/* ---------------- Sheets ---------------- */
+let openSheet = null;
+function showSheet(el){ closeSheets(); openSheet = el; $('#back').classList.add('on'); el.classList.add('on'); }
+function closeSheets(){ document.querySelectorAll('.sheet,.dlg').forEach(x => x.classList.remove('on')); $('#back').classList.remove('on'); openSheet = null; }
+$('#back').addEventListener('click', () => { if(openSheet === $('#dlg')) return; closeSheets(); });
+$('#dClose').onclick = closeSheets; $('#sClose').onclick = closeSheets;
+
+function openDetail(id){
+  const L = LIB[id], D = L && L.card ? DETAIL[L.card] : null;
+  if(!D) return;
+  $('#dTitle').textContent = L.n;
+  let h = `<div class="tags" style="margin-bottom:10px">${(D.tags||[]).map(t => `<span>${t}</span>`).join('')}</div>`;
+  h += `<div class="paper"><div class="figs">${D.frames.map(f => `<div>${f[0]}<div class="cap">${f[1]}</div></div>`).join('')}</div></div>`;
+  h += `<h5 style="background:#495057;color:#fff;margin-top:4px">やり方</h5><ol>${D.steps.map(s => `<li>${s}</li>`).join('')}</ol>`;
+  if(D.dose) h += `<h5 style="background:#1971c2;color:#fff">回数の目安</h5><p>${D.dose}</p>`;
+  if(D.tip) h += `<h5 style="background:#2b8a3e;color:#fff">コツ</h5><p>${D.tip}</p>`;
+  if(D.ng) h += `<h5 style="background:#d6336c;color:#fff">NG</h5><p>${D.ng}</p>`;
+  $('#dBody').innerHTML = h; $('#dBody').scrollTop = 0;
+  showSheet($('#sheetDetail'));
+}
+
+function renderSettings(){
+  $('#oSound').checked = ST.sound; $('#oVoice').checked = ST.voice; $('#oVib').checked = ST.vib;
+  $('#oWake').checked = ST.wake; $('#oWarm').checked = ST.warm; $('#oCool').checked = ST.cool;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const st = swReady ? '✅ オフライン用の保存が完了しています(圏外でも開けます)' : '⏳ オフライン保存はまだです。ネットにつないだ状態で一度開いてください';
+  $('#help').innerHTML = `<b>${st}</b><br><br><b>ホーム画面に追加</b><br>${ios ? 'Safari → 共有ボタン →「ホーム画面に追加」' : 'Chrome → ︙ メニュー →「ホーム画面に追加 / アプリをインストール」'}<br><br><b>注意</b><br>・ロック画面中は音が止まることがあります。実行中は画面をつけたままにしてください。<br>・iPhoneはマナースイッチがオンだと音が出ない場合があります。<br>・種目の「?」をタップすると図解が見られます。`;
+}
+$('#btnSet').onclick = () => { renderSettings(); showSheet($('#sheetSet')); };
+[['oSound','sound'],['oVoice','voice'],['oVib','vib'],['oWake','wake'],['oWarm','warm'],['oCool','cool']].forEach(([id,k]) => {
+  $('#'+id).addEventListener('change', e => { ST[k] = e.target.checked; store.set('st_v1', ST); if(k==='voice' && ST.voice) speak('音声ガイドをオンにしました'); if(k==='sound' && ST.sound){ unlockAudio(); beep(880,.12); } renderHome(); });
+});
+$('#btnTest').onclick = () => { unlockAudio(); beep(880,.12,0); beep(880,.12,.25); beep(1320,.4,.5); speak('テストです'); vib(100); };
+
+/* ---------------- Audio / voice / vib / wake ---------------- */
+let AC = null, silent = null;
+function silentWav(){
+  const sr = 8000, n = sr/2, b = new Uint8Array(44 + n), dv = new DataView(b.buffer);
+  const w = (o,s) => { for(let i=0;i<s.length;i++) b[o+i] = s.charCodeAt(i); };
+  w(0,'RIFF'); dv.setUint32(4,36+n,true); w(8,'WAVE'); w(12,'fmt '); dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,1,true);
+  dv.setUint32(24,sr,true); dv.setUint32(28,sr,true); dv.setUint16(32,1,true); dv.setUint16(34,8,true); w(36,'data'); dv.setUint32(40,n,true);
+  b.fill(128,44);
+  return URL.createObjectURL(new Blob([b], {type:'audio/wav'}));
+}
+function unlockAudio(){
+  try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if(AC.state === 'suspended') AC.resume(); }catch(e){}
+  try{ if(!silent){ silent = new Audio(silentWav()); silent.loop = true; } silent.play().catch(()=>{}); }catch(e){}
+}
+function stopSilent(){ try{ silent && silent.pause(); }catch(e){} }
+function beep(freq, dur, when, vol){
+  if(!AC) return;
+  try{
+    const t = AC.currentTime + (when||0), o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol||0.5, t+0.01); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+dur+0.02);
+  }catch(e){}
+}
+function speak(t){
+  if(!ST.voice || !('speechSynthesis' in window)) return;
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'ja-JP'; u.rate = 1.1; speechSynthesis.speak(u); }catch(e){}
+}
+function vib(p){ if(ST.vib && navigator.vibrate){ try{ navigator.vibrate(p); }catch(e){} } }
+let WL = null;
+async function wake(){
+  if(!ST.wake || !('wakeLock' in navigator) || WL) return;
+  try{ WL = await navigator.wakeLock.request('screen'); WL.addEventListener('release', () => { WL = null; }); }catch(e){ WL = null; }
+}
+function unwake(){ try{ WL && WL.release(); }catch(e){} WL = null; }
+
+function cueSeg(s){
+  if(ST.sound){
+    if(s.type==='work'){ beep(1320,.16,0); beep(1760,.28,.2); }
+    else if(s.type==='rest'){ beep(660,.3,0); }
+    else if(s.type==='switch'){ beep(990,.12,0); beep(990,.12,.18); }
+    else if(s.type==='prep'){ beep(880,.18,0); }
+  }
+  vib(s.type==='work' ? [120,60,120] : 80);
+  if(s.type==='prep') speak(`次は、${s.name}`);
+  else if(s.type==='work') speak(s.side ? `スタート、${s.side}` : 'スタート');
+  else if(s.type==='rest') speak('休憩');
+  else if(s.type==='switch') speak('反対側');
+}
+
+/* ---------------- Run ---------------- */
+let R = null, timer = null, runCtx = null, wasRunning = false;
+const C = 2 * Math.PI * 132;
+const cache = {};
+function setT(id, v){ if(cache[id] !== v){ cache[id] = v; $('#'+id).textContent = v; } }
+
+function startRun(){
+  const m = menu();
+  const tl = buildTimeline(m);
+  if(!tl.segs.length) return;
+  R = new Runner(tl.segs);
+  runCtx = {day:SEL.day, place:SEL.place, level:SEL.level, total:tl.total};
+  Object.keys(cache).forEach(k => delete cache[k]);
+  showView('run');
+  unlockAudio(); wake();
+  R.start();
+  updateRun(true);
+  cueSeg(R.seg());
+  clearInterval(timer); timer = setInterval(loop, 100);
+}
+function loop(){
+  if(!R) return;
+  const ev = R.tick();
+  for(const e of ev){
+    if(e.type === 'seg') { cueSeg(e.seg); updateRun(true); }
+    else if(e.type === 'count'){ if(ST.sound) beep(880, .09); vib(30); }
+    else if(e.type === 'done'){ finish(); return; }
+  }
+  updateRun(false);
+}
+function updateRun(force){
+  const s = R.seg(), rem = R.remainingMs(), sec = Math.ceil(rem/1000);
+  const run = $('#run');
+  if(run.dataset.phase !== s.type) run.dataset.phase = s.type;
+  let label = PH[s.type];
+  if(s.type==='work' && s.gkey==='warm') label = 'ウォームアップ';
+  if(s.type==='work' && s.gkey==='cool') label = 'ストレッチ';
+  setT('pill', label);
+  setT('exn', s.name);
+  const sd = $('#side');
+  if(s.side){ sd.hidden = false; setT('side', s.type==='switch' ? '右へ切替' : s.side + '側'); }
+  else sd.hidden = true;
+  setT('setinfo', (s.sets>1 ? `セット ${s.set} / ${s.sets}　` : '') + `種目 ${s.xi+1} / ${s.xn}`);
+  setT('cue', s.type==='rest' ? `次: ${s.next}` : (s.type==='switch' ? '体の向きを変えて' : s.cue || ''));
+  setT('nextT', s.next);
+  setT('grpN', s.group);
+  const dg = sec >= 60 ? fmt(sec) : String(sec);
+  if(cache.dig !== dg){ cache.dig = dg; const d = $('#dig'); d.textContent = dg; if(sec<=3 && s.dur>4){ d.classList.remove('pop'); void d.offsetWidth; d.classList.add('pop'); } }
+  const frac = Math.min(1, rem / (s.dur*1000));
+  $('#ring').style.strokeDashoffset = (C * (1 - frac)).toFixed(1);
+  const tot = R.totalMs(), dn = R.doneMs();
+  $('#pbar').style.width = (dn/tot*100).toFixed(1) + '%';
+  setT('tmL', fmt(dn/1000)); setT('tmR', '残り ' + fmt((tot-dn)/1000));
+  $('#btnPlus').hidden = s.type !== 'rest';
+  const L = LIB[s.ex];
+  $('#btnHow').hidden = !(L && L.card) || s.type==='rest';
+  const pl = R.running ? IC_PAUSE : IC_PLAY;
+  if(cache.pl !== pl){ cache.pl = pl; $('#btnPlay').innerHTML = pl; }
+  if(openSheet === $('#sheetDetail')){ const lv = $('#dLive'); lv.hidden = false; lv.textContent = `${PH[s.type]} ${dg}`; lv.style.background = `var(--${s.type==='work'?'work':s.type==='rest'?'rest':s.type==='switch'?'sw':'prep'})`; }
+}
+$('#btnPlay').onclick = () => { unlockAudio(); R.toggle(); if(R.running) wake(); updateRun(); };
+$('#btnNext').onclick = () => { const ev = R.skip(); handle(ev); };
+$('#btnPrev').onclick = () => { handle(R.back()); };
+$('#btnPlus').onclick = () => { R.addTime(15); updateRun(); };
+$('#btnHow').onclick = () => { openDetail(R.seg().ex); };
+function handle(ev){ for(const e of ev){ if(e.type==='seg'){ cueSeg(e.seg); } else if(e.type==='done'){ finish(); return; } } updateRun(true); }
+
+$('#btnClose').onclick = () => { wasRunning = R.running; R.pause(); updateRun(); $('#back').classList.add('on'); $('#dlg').classList.add('on'); openSheet = $('#dlg'); };
+$('#dlgNo').onclick = () => { closeSheets(); if(wasRunning) R.start(); };
+$('#dlgYes').onclick = () => { closeSheets(); stopRun(); showView('home'); renderHome(); };
+function stopRun(){ clearInterval(timer); timer = null; R = null; unwake(); stopSilent(); try{ speechSynthesis.cancel(); }catch(e){} }
+
+function finish(){
+  const segs = R.segs;
+  const secs = Math.round(segs.reduce((a,s) => a + s.dur, 0));
+  const exs = new Set(segs.map(s => s.ex)).size;
+  const allW = segs.filter(s => s.type==='work'); const mainW = allW.filter(s => s.gkey!=='warm' && s.gkey!=='cool'); const sets = (mainW.length ? mainW : allW).length;
+  HIST.push({ts:Date.now(), day:runCtx.day, place:runCtx.place, level:runCtx.level, sec:secs, ex:exs, sets});
+  HIST = HIST.slice(-200); store.set('hist_v1', HIST);
+  if(ST.sound){ beep(880,.15,0); beep(1100,.15,.18); beep(1320,.15,.36); beep(1760,.5,.54); }
+  vib([200,100,200,100,400]); speak('おつかれさま');
+  $('#sTime').textContent = Math.max(1, Math.round(secs/60)); $('#sEx').textContent = exs; $('#sSet').textContent = sets;
+  const n = HIST.filter(x => x.ts >= weekStart()).length;
+  $('#doneMsg').textContent = `今週 ${n}回目の完了です`;
+  stopRun(); closeSheets(); showView('done');
+}
+$('#btnHome').onclick = () => { showView('home'); renderHome(); };
+
+function showView(id){ document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === id)); }
+
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && R){ if(R.running) wake(); loop(); } });
+document.addEventListener('keydown', e => {
+  if(!R) return;
+  if(e.code==='Space'){ e.preventDefault(); $('#btnPlay').click(); }
+  else if(e.code==='ArrowRight') $('#btnNext').click();
+  else if(e.code==='ArrowLeft') $('#btnPrev').click();
+});
+$('#btnGo').onclick = startRun;
+
+/* ---------------- PWA ---------------- */
+let swReady = false;
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).then(() => { swReady = true; }).catch(() => {});
+}
+window.__app = {get R(){ return R; }, SEL, ST};
+renderHome();
+})();
+</script>
+</body>
+</html>
