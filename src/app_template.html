@@ -117,11 +117,12 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .pill{display:inline-block;padding:7px 24px;border-radius:999px;background:var(--pc);color:var(--ink);font-weight:800;font-size:20px;letter-spacing:.08em;transition:background .3s}
 .exn{font-size:clamp(26px,7.6vw,38px);font-weight:800;line-height:1.2;max-width:100%;text-wrap:balance}
 .setinfo{margin-top:6px;font-size:20px;color:var(--tx);font-weight:700;display:flex;flex-direction:column;gap:4px;align-items:center}
-.exn{min-height:2.4em;display:flex;align-items:center;justify-content:center}.setinfo{min-height:62px}.setinfo.compact{min-height:0}.setinfo.compact .r1{display:none}.setinfo .r1{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:22px}
+.setinfo{min-height:56px}.setinfo.compact{min-height:0}.setinfo.compact .r1{display:none}.setinfo .r1{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:22px}
 .setinfo .xi{font-size:14px;color:var(--mut);font-weight:600}
 .side{display:inline-block;line-height:1.3;font-size:22px;background:var(--card2);color:var(--tx);border:2px solid var(--pc);padding:1px 14px;border-radius:12px;font-weight:800}
 .side[hidden]{display:none}
-.ringw{position:relative;width:min(86vw,44vh);aspect-ratio:1;container-type:size;cursor:pointer}
+.rw{flex:1 1 0;min-height:0;width:100%;display:grid;place-items:center;container-type:size}
+.ringw{position:relative;width:min(88cqw,100cqh);aspect-ratio:1;container-type:size;cursor:pointer}
 .ringw svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
 .ringw .trk{stroke:rgba(242,239,228,.09)}
 .ringw .pg{stroke:var(--pc);stroke-linecap:round;transition:stroke .3s,stroke-dashoffset .1s linear}
@@ -143,7 +144,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .cb.main{width:88px;height:88px;background:var(--pc);transition:background .3s}
 .cb.main svg{width:36px;height:36px;fill:var(--ink)}
 .cb:active{transform:scale(.94)}
-@media (max-height:660px){.rmid{justify-content:space-around}.pill{font-size:17px;padding:5px 20px}.setinfo{font-size:17px;margin-top:2px}.ringw{width:min(78vw,40vh)}.digits small{font-size:14px}.next{padding:7px 14px}.next b{font-size:14px}.cb.main{width:76px;height:76px}.cb{width:52px;height:52px}.xrow{padding-bottom:4px}}
+@media (max-height:660px){.rmid{justify-content:space-around}.pill{font-size:17px;padding:5px 20px}.setinfo{font-size:17px;margin-top:2px}.digits small{font-size:14px}.next{padding:7px 14px}.next b{font-size:14px}.cb.main{width:76px;height:76px}.cb{width:52px;height:52px}.xrow{padding-bottom:4px}}
 
 /* ---------- Done ---------- */
 #done{align-items:center;justify-content:center;text-align:center;padding:24px;background:radial-gradient(120% 60% at 50% 0%,rgba(95,212,164,.22),transparent 60%),var(--bg);overflow-y:auto}
@@ -223,8 +224,8 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .dlg b{font-size:19px;font-weight:800}.dlg p{color:var(--mut);margin:8px 0 6px;font-size:14.5px;line-height:1.6}
 @media (orientation:landscape) and (max-height:520px){
 .rmid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto;align-content:center;align-items:center;gap:6px 18px;padding:0 20px}
-.rmid .ringw{grid-column:1;grid-row:1/4;width:min(62vh,100%);justify-self:center}
-.rmid>div:not(.ringw):not(.next){grid-column:2}
+.rmid .rw{grid-column:1;grid-row:1/4;height:100%}
+.rmid>div:not(.rw):not(.next){grid-column:2}
 .rmid .next{grid-column:2}
 .digits small{font-size:13px}}
 @media (max-height:700px){.exn{min-height:0}.setinfo{min-height:0}.theme{padding:14px 16px 12px}.theme .t{font-size:22px}.days .day{height:52px}}
@@ -279,10 +280,10 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
       <div class="exn" id="exn"></div>
       <div class="setinfo"><div class="r1"><span class="side" id="side" hidden></span><span id="setinfo"></span></div><span class="xi" id="xinfo"></span></div>
     </div>
-    <div class="ringw" id="ringw" role="button" tabindex="0" aria-label="タップで一時停止/再開">
+    <div class="rw"><div class="ringw" id="ringw" role="button" tabindex="0" aria-label="タップで一時停止/再開">
       <svg viewBox="0 0 300 300"><circle class="trk" cx="150" cy="150" r="132" fill="none" stroke-width="14"/><circle class="pg" id="ring" cx="150" cy="150" r="132" fill="none" stroke-width="14" stroke-dasharray="829.38" stroke-dashoffset="0"/></svg>
       <div class="digits"><b id="dig">10</b><small id="cue"></small></div>
-    </div>
+    </div></div>
     <div class="next"><em>次</em><b id="nextT"></b></div>
   </div>
   <div class="xrow">

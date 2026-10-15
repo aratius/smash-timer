@@ -121,6 +121,7 @@ function getMenu(day, place, level, opts = {}) {
   return out;
 }
 
+const REST_MAX = 30;
 const PREP_FIRST = 10, PREP_MAIN = 15, PREP_LIGHT = 5, SWITCH = 5;
 const GEAR_OF = ids => [...new Set(ids.map(id => LIB[id].gear).filter(Boolean))];
 
@@ -137,11 +138,9 @@ function buildTimeline(menu) {
     const nextIt = flat[xi + 1];
     // prep
     const prevL = xi > 0 ? LIB[flat[xi - 1].id] : null;
-    let prep = xi === 0 ? PREP_FIRST : (L.light ? PREP_LIGHT : PREP_MAIN);
-    if (prevL && !prevL.light && !L.light) prep = Math.min(120, Math.max(PREP_MAIN, L.r > 0 ? Math.min(prevL.r, L.r * 2) : prevL.r));   // 種目間の回復
-    if (prevL && !prevL.light && L.light) prep = 10;
+    const prep = xi === 0 ? PREP_FIRST : ((L.light && prevL.light) ? PREP_LIGHT : 10);   // 種目間のインターバルは10秒
     const base = { light: L.light ? 1 : 0, how: L.how || '', card: L.card || 0, gkey: it.gkey, ex: it.id, name: L.n, amt: L.amt, cue: L.cue, xi, xn: flat.length, gi: it.gi, gn: it.gn, group: it.group, sets: it.sets };
-    push({ ...base, type: 'prep', dur: prep, set: 1, side: null, long: xi > 0 && prep >= 40 });
+    push({ ...base, type: 'prep', dur: prep, set: 1, side: null, long: false });
     for (let s = 1; s <= it.sets; s++) {
       if (L.side) {
         push({ ...base, type: 'work', dur: L.w, set: s, side: '左' });
@@ -150,7 +149,7 @@ function buildTimeline(menu) {
       } else {
         push({ ...base, type: 'work', dur: L.w, set: s, side: null });
       }
-      if (s < it.sets && L.r > 0) push({ ...base, type: 'rest', dur: L.r, set: s, side: null });
+      if (s < it.sets && L.r > 0) push({ ...base, type: 'rest', dur: Math.min(L.r, REST_MAX), set: s, side: null });
     }
   });
   // fill "next" labels
