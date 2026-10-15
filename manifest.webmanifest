@@ -1,4 +1,5 @@
 {
+ "id": "./",
  "name": "ジャンプスマッシュ・タイマー",
  "short_name": "スマッシュ",
  "description": "バドミントン ジャンプスマッシュ強化メニューの自動タイマー",
@@ -6,8 +7,8 @@
  "scope": "./",
  "display": "standalone",
  "orientation": "portrait",
- "background_color": "#0a0f1a",
- "theme_color": "#0a0f1a",
+ "background_color": "#0a1511",
+ "theme_color": "#0a1511",
  "lang": "ja",
  "icons": [
   {
@@ -23,7 +24,7 @@
    "purpose": "any"
   },
   {
-   "src": "icon-512.png",
+   "src": "icon-maskable-512.png",
    "sizes": "512x512",
    "type": "image/png",
    "purpose": "maskable"

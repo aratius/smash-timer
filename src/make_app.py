@@ -31,52 +31,38 @@ open(f"{out}/index.html", "w", encoding="utf-8").write(html)
 ver = hashlib.sha1(html.encode()).hexdigest()[:10]
 
 open(f"{out}/sw.js", "w", encoding="utf-8").write(f"""const V = 'smash-timer-{ver}';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
-self.addEventListener('install', e => {{ e.waitUntil(caches.open(V).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())); }});
+const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
+self.addEventListener('install', e => {{
+  e.waitUntil(caches.open(V).then(c => Promise.all(ASSETS.map(u =>
+    fetch(new Request(u, {{cache: 'reload'}})).then(r => {{ if (!r.ok) throw new Error(u); return c.put(u, r); }})
+  ))).then(() => self.skipWaiting()));
+}});
 self.addEventListener('activate', e => {{
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 }});
 self.addEventListener('fetch', e => {{
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
-  e.respondWith(caches.match(req, {{ignoreSearch: true}}).then(hit => {{
-    const net = fetch(req).then(r => {{
-      if (r && r.ok) {{ const copy = r.clone(); caches.open(V).then(c => c.put(req, copy)); }}
-      return r;
-    }}).catch(() => hit || (req.mode === 'navigate' ? caches.match('./index.html') : undefined));
-    return hit || net;
-  }}));
+  e.respondWith((async () => {{
+    const cache = await caches.open(V);
+    const hit = await cache.match(req, {{ignoreSearch: true}});
+    const net = fetch(req).then(r => {{ if (r && r.ok) e.waitUntil(cache.put(req, r.clone())); return r; }}).catch(() => null);
+    if (hit) {{ e.waitUntil(net); return hit; }}
+    const r = await net; if (r) return r;
+    if (req.mode === 'navigate') return (await cache.match('./index.html')) || Response.error();
+    return Response.error();
+  }})());
 }});
 """)
 open(f"{out}/manifest.webmanifest", "w", encoding="utf-8").write(json.dumps({
-  "name": "ジャンプスマッシュ・タイマー", "short_name": "スマッシュ", "description": "バドミントン ジャンプスマッシュ強化メニューの自動タイマー",
+  "id": "./", "name": "ジャンプスマッシュ・タイマー", "short_name": "スマッシュ", "description": "バドミントン ジャンプスマッシュ強化メニューの自動タイマー",
   "start_url": "./", "scope": "./", "display": "standalone", "orientation": "portrait",
-  "background_color": "#0a0f1a", "theme_color": "#0a0f1a", "lang": "ja",
+  "background_color": "#0a1511", "theme_color": "#0a1511", "lang": "ja",
   "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
             {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-            {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}, ensure_ascii=False, indent=1))
+            {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}, ensure_ascii=False, indent=1))
 
-# icons
-from PIL import Image, ImageDraw
-def icon(size):
-    k = 4; S = size * k
-    im = Image.new("RGB", (S, S), "#0a0f1a"); d = ImageDraw.Draw(im)
-    c = S / 2; R = S * 0.33; w = int(S * 0.045)
-    d.ellipse([c-R, c-R, c+R, c+R], outline="#1d2740", width=w)
-    d.arc([c-R, c-R, c+R, c+R], start=-90, end=200, fill="#ff6a2b", width=w)
-    lw = int(S * 0.035)
-    def L(p, q): d.line([p, q], fill="#ffffff", width=lw, joint="curve"); 
-    hx, hy = c, c - S*0.15
-    d.ellipse([hx-S*0.04, hy-S*0.04, hx+S*0.04, hy+S*0.04], fill="#ffffff")
-    sh = (c, c - S*0.095); hip = (c, c + S*0.04)
-    L(sh, hip)
-    L(sh, (c - S*0.10, c - S*0.17)); L(sh, (c + S*0.11, c - S*0.19))   # arms up (racket arm)
-    L(hip, (c - S*0.06, c + S*0.12)); L((c - S*0.06, c + S*0.12), (c - S*0.04, c + S*0.17))
-    L(hip, (c + S*0.07, c + S*0.11)); L((c + S*0.07, c + S*0.11), (c + S*0.03, c + S*0.16))
-    for r in [(c + S*0.11, c - S*0.19)]:
-        d.ellipse([r[0]-S*0.012, r[1]-S*0.03, r[0]+S*0.05, r[1]+S*0.01], fill="#ff6a2b")
-    return im.resize((size, size), Image.LANCZOS)
-for n in (180, 192, 512): icon(n).save(f"{out}/icon-{n}.png")
+for n in (180, 192, 512, 'maskable-512'): shutil.copy(f"icon-{n}.png", f"{out}/icon-{n}.png")
 
 open(f"{out}/README.txt", "w", encoding="utf-8").write("""スマッシュ・タイマー(オフライン対応PWA)
 
